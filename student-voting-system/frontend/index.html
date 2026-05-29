@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Voting System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f4f1eb;
+      --surface:  #ffffff;
+      --card:     #ffffff;
+      --navy:     #0f1f3d;
+      --blue:     #1a3a6b;
+      --gold:     #c8991a;
+      --gold-lt:  #f5e4a0;
+      --red:      #c0392b;
+      --green:    #1a7a4a;
+      --muted:    #8a8880;
+      --border:   #ddd9d0;
+      --text:     #1a1a1a;
+      --radius:   8px;
+      --font-h:   'Syne', sans-serif;
+      --font-b:   'Inter', sans-serif;
+      --shadow:   0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: var(--font-b); min-height: 100vh; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--navy);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 3px solid var(--gold);
+    }
+    .logo-area { display: flex; align-items: center; gap: 1rem; }
+    .logo-seal {
+      width: 42px; height: 42px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-h); font-weight: 800; color: var(--navy); font-size: 1rem;
+    }
+    .logo-text { font-family: var(--font-h); color: #fff; font-size: 1rem; font-weight: 700; line-height: 1.2; }
+    .logo-text span { color: var(--gold); font-size: 0.75rem; font-weight: 400; display: block; letter-spacing: 1px; }
+    .election-badge {
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-h);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      background: var(--navy);
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.5);
+      font-family: var(--font-h); font-size: 0.82rem; font-weight: 600;
+      padding: 0.8rem 1.2rem;
+      letter-spacing: 0.5px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .tab-btn:hover { color: rgba(255,255,255,0.8); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── STATS ROW ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .stat-card .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; margin-bottom: 0.4rem; }
+    .stat-card .value { font-family: var(--font-h); font-size: 2rem; font-weight: 800; color: var(--navy); }
+    .stat-card .sub   { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .section-title { font-family: var(--font-h); font-size: 1.25rem; font-weight: 700; color: var(--navy); }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap svg { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .search-wrap input { padding-left: 2.4rem; }
+
+    input, select, textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 0.6rem 0.9rem;
+      font-family: var(--font-b);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 0.6rem 1.3rem;
+      border-radius: var(--radius);
+      border: none;
+      font-family: var(--font-h);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .btn-primary  { background: var(--navy); color: #fff; }
+    .btn-primary:hover  { background: var(--blue); }
+    .btn-gold     { background: var(--gold); color: var(--navy); }
+    .btn-gold:hover     { background: #b8890e; }
+    .btn-danger   { background: var(--red); color: #fff; }
+    .btn-danger:hover   { background: #a93226; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover    { border-color: var(--navy); color: var(--navy); }
+    .btn-sm { padding: 0.38rem 0.85rem; font-size: 0.76rem; }
+
+    /* ── TABLE ── */
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { background: var(--navy); }
+    th { padding: 0.85rem 1rem; text-align: left; color: rgba(255,255,255,0.7); font-family: var(--font-h); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #faf8f4; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.22rem 0.65rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px; }
+    .badge-Active      { background: #d4edda; color: var(--green); }
+    .badge-Inactive    { background: #f0ede7; color: var(--muted); }
+    .badge-Disqualified{ background: #fde8e8; color: var(--red); }
+    .badge-voted       { background: var(--gold-lt); color: #8a6a00; }
+    .badge-not-voted   { background: #f0ede7; color: var(--muted); }
+    .badge-Ongoing     { background: #d4edda; color: var(--green); }
+    .badge-Upcoming    { background: #d0e4f7; color: var(--blue); }
+    .badge-Ended       { background: #f0ede7; color: var(--muted); }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.88rem; }
+
+    /* ── RESULTS ── */
+    .results-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+    .result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .result-card-header { background: var(--navy); color: #fff; padding: 0.9rem 1.2rem; font-family: var(--font-h); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.5px; }
+    .result-row { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .result-row:last-child { border-bottom: none; }
+    .result-row.winner { background: #fffbea; }
+    .winner-crown { color: var(--gold); font-size: 1rem; }
+    .result-name { flex: 1; font-weight: 600; font-size: 0.9rem; }
+    .result-meta { font-size: 0.75rem; color: var(--muted); }
+    .result-votes { font-family: var(--font-h); font-weight: 800; font-size: 1.3rem; color: var(--navy); min-width: 40px; text-align: right; }
+    .result-bar-wrap { flex: 2; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+    .result-bar { height: 100%; background: var(--navy); border-radius: 999px; transition: width 0.6s ease; }
+    .result-row.winner .result-bar { background: var(--gold); }
+
+    /* ── MODAL ── */
+    .overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.6); backdrop-filter: blur(3px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .overlay.active { opacity: 1; pointer-events: all; }
+    .modal { background: var(--card); border-radius: 12px; padding: 2rem; width: 100%; max-width: 480px; transform: translateY(16px); transition: transform 0.25s; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .overlay.active .modal { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
+    .modal-title { font-family: var(--font-h); font-size: 1.35rem; font-weight: 800; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 1.2rem; color: var(--muted); cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group.full { grid-column: 1/-1; }
+    label { font-size: 0.74rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.4rem; }
+
+    /* ── VOTE MODAL ── */
+    .vote-position { margin-bottom: 1.2rem; }
+    .vote-position h4 { font-family: var(--font-h); font-size: 0.9rem; color: var(--navy); margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    .vote-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.4rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+    .vote-option:hover { background: #f4f1eb; }
+    .vote-option input[type=radio] { accent-color: var(--navy); width: 16px; height: 16px; }
+    .vote-option-name { font-weight: 600; font-size: 0.88rem; }
+    .vote-option-meta { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── TOAST ── */
+    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--navy); color: #fff; padding: 0.85rem 1.3rem; border-radius: var(--radius); font-size: 0.85rem; z-index: 999; transform: translateY(60px); opacity: 0; transition: all 0.3s; border-left: 3px solid var(--gold); max-width: 320px; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { border-left-color: var(--red); }
+
+    .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 2.5rem auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .turnout-bar-wrap { background: var(--border); border-radius: 999px; height: 12px; margin: 0.5rem 0; overflow: hidden; }
+    .turnout-bar { height: 100%; background: var(--navy); border-radius: 999px; transition: width 0.8s ease; }
+
+    @media (max-width: 700px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .tabs { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-seal">SC</div>
+    <div class="logo-text">
+      Student Voting System
+      <span>Tangub City Global College</span>
+    </div>
+  </div>
+  <div class="election-badge" id="election-status-badge">Loading…</div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('candidates')">Candidates</button>
+  <button class="tab-btn" onclick="switchTab('voters')">Voters</button>
+  <button class="tab-btn" onclick="switchTab('positions')">Positions</button>
+  <button class="tab-btn" onclick="switchTab('vote')">Cast Vote</button>
+  <button class="tab-btn" onclick="switchTab('results')">Results</button>
+</div>
+
+<div class="container">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Total Candidates</div><div class="value" id="s-candidates">—</div></div>
+      <div class="stat-card"><div class="label">Registered Voters</div><div class="value" id="s-voters">—</div></div>
+      <div class="stat-card"><div class="label">Votes Cast</div><div class="value" id="s-voted">—</div></div>
+      <div class="stat-card"><div class="label">Voter Turnout</div><div class="value" id="s-turnout">—</div><div class="sub"><div class="turnout-bar-wrap"><div class="turnout-bar" id="s-turnout-bar" style="width:0%"></div></div></div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Position</th><th>Leading Candidate</th><th>Votes</th></tr></thead>
+        <tbody id="dash-leaders"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── CANDIDATES ── -->
+  <div class="tab-panel" id="tab-candidates">
+    <div class="section-header">
+      <div class="section-title">Candidates</div>
+      <button class="btn btn-primary" onclick="openModal('candidate')">+ Add Candidate</button>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="cand-search" placeholder="Search candidates…" oninput="debounce(loadCandidates,350)()"/>
+      </div>
+      <select id="cand-pos-filter" onchange="loadCandidates()"><option value="">All Positions</option></select>
+      <select id="cand-status-filter" onchange="loadCandidates()"><option value="">All Status</option><option>Active</option><option>Disqualified</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Position</th><th>Course</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="candidates-tbody"><tr><td colspan="8"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── VOTERS ── -->
+  <div class="tab-panel" id="tab-voters">
+    <div class="section-header">
+      <div class="section-title">Voters</div>
+      <button class="btn btn-primary" onclick="openModal('voter')">+ Register Voter</button>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="voter-search" placeholder="Search voters…" oninput="debounce(loadVoters,350)()"/>
+      </div>
+      <select id="voter-voted-filter" onchange="loadVoters()"><option value="">All</option><option value="1">Voted</option><option value="0">Not Yet Voted</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Student ID</th><th>Email</th><th>Course</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="voters-tbody"><tr><td colspan="8"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── POSITIONS ── -->
+  <div class="tab-panel" id="tab-positions">
+    <div class="section-header">
+      <div class="section-title">Positions</div>
+      <button class="btn btn-primary" onclick="openModal('position')">+ Add Position</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Position Title</th><th>Description</th><th>Max Votes</th><th>Actions</th></tr></thead>
+        <tbody id="positions-tbody"><tr><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── CAST VOTE ── -->
+  <div class="tab-panel" id="tab-vote">
+    <div class="section-header"><div class="section-title">Cast Your Vote</div></div>
+    <div style="max-width:520px">
+      <div class="form-group" style="margin-bottom:1rem">
+        <label>Enter Your Student ID</label>
+        <div style="display:flex;gap:0.75rem">
+          <input type="text" id="vote-student-id" placeholder="e.g. 2024-0001"/>
+          <button class="btn btn-primary" onclick="lookupVoter()">Verify</button>
+        </div>
+      </div>
+      <div id="vote-panel" style="display:none">
+        <div id="voter-info" style="background:var(--gold-lt);border-radius:var(--radius);padding:0.9rem 1.1rem;margin-bottom:1.2rem;font-size:0.88rem">
+        </div>
+        <div id="vote-positions"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:1rem;font-size:0.95rem" onclick="submitVote()">🗳️ Submit Vote</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div class="tab-panel" id="tab-results">
+    <div class="section-header">
+      <div class="section-title">Election Results</div>
+      <button class="btn btn-ghost" onclick="loadResults()">↻ Refresh</button>
+    </div>
+    <div id="results-container"><div class="spinner"></div></div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ── MODALS ── -->
+<div class="overlay" id="overlay" onclick="closeOnBackdrop(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">—</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost/student-voting-system/api';
+
+// ── STATE ──
+let editingId   = null;
+let modalType   = null;
+let allPositions = [];
+let currentVoter = null;
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'candidates') loadCandidates();
+  if (name === 'voters')     loadVoters();
+  if (name === 'positions')  loadPositions();
+  if (name === 'results')    loadResults();
+}
+
+// ── DEBOUNCE ──
+const _timers = {};
+function debounce(fn, ms) {
+  return function() {
+    clearTimeout(_timers[fn]);
+    _timers[fn] = setTimeout(fn, ms);
+  };
+}
+
+// ── FETCH HELPERS ──
+async function apiFetch(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch(API + path, opts);
+  return res.json();
+}
+
+// ── INIT ──
+async function init() {
+  // Load settings badge
+  try {
+    const s = await apiFetch('/settings');
+    if (s.success) {
+      document.getElementById('election-status-badge').textContent = s.data.election_name + ' — ' + s.data.status;
+      document.getElementById('election-status-badge').className = 'election-badge badge-' + s.data.status;
+    }
+  } catch {}
+
+  // Load positions for filters
+  try {
+    const p = await apiFetch('/positions');
+    if (p.success) {
+      allPositions = p.data;
+      const sel = document.getElementById('cand-pos-filter');
+      p.data.forEach(pos => {
+        const o = document.createElement('option');
+        o.value = pos.id; o.textContent = pos.title;
+        sel.appendChild(o);
+      });
+    }
+  } catch {}
+
+  loadDashboard();
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+  try {
+    const [cv, vt, res] = await Promise.all([
+      apiFetch('/candidates'),
+      apiFetch('/voters'),
+      apiFetch('/results')
+    ]);
+
+    document.getElementById('s-candidates').textContent = cv.data?.length ?? '—';
+    document.getElementById('s-voters').textContent     = vt.data?.length ?? '—';
+
+    if (res.success) {
+      document.getElementById('s-voted').textContent    = res.data.total_voted;
+      document.getElementById('s-turnout').textContent  = res.data.turnout_pct + '%';
+      document.getElementById('s-turnout-bar').style.width = res.data.turnout_pct + '%';
+
+      const tbody = document.getElementById('dash-leaders');
+      tbody.innerHTML = '';
+      res.data.results.forEach(pos => {
+        const leader = pos.candidates[0];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${esc(pos.position)}</strong></td>
+          <td>${leader ? esc(leader.candidate) + ' <span style="color:var(--muted);font-size:0.78rem">('+leader.course+')</span>' : '<span style="color:var(--muted)">No candidates</span>'}</td>
+          <td><strong>${leader ? leader.vote_count : '—'}</strong></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  } catch (e) { console.error(e); }
+}
+
+// ── CANDIDATES ──
+async function loadCandidates() {
+  let url = '/candidates?';
+  const s = document.getElementById('cand-search').value;
+  const p = document.getElementById('cand-pos-filter').value;
+  const st= document.getElementById('cand-status-filter').value;
+  if (s)  url += `search=${encodeURIComponent(s)}&`;
+  if (p)  url += `position_id=${p}&`;
+  if (st) url += `status=${st}&`;
+
+  const tbody = document.getElementById('candidates-tbody');
+  tbody.innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
+
+  try {
+    const json = await apiFetch(url);
+    const data = json.data || [];
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No candidates found.</div></td></tr>'; return; }
+    tbody.innerHTML = data.map((c,i) => `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><strong>${esc(c.full_name)}</strong></td>
+        <td style="color:var(--muted)">${esc(c.student_id)}</td>
+        <td>${esc(c.position_title)}</td>
+        <td>${esc(c.course)}</td>
+        <td>${esc(c.year_level)}</td>
+        <td><span class="badge badge-${c.status}">${c.status}</span></td>
+        <td><div style="display:flex;gap:0.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="editCandidate(${c.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('candidates',${c.id},'${esc(c.full_name)}',loadCandidates)">Del</button>
+        </div></td>
+      </tr>`).join('');
+  } catch { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Failed to load.</div></td></tr>'; }
+}
+
+// ── VOTERS ──
+async function loadVoters() {
+  let url = '/voters?';
+  const s  = document.getElementById('voter-search').value;
+  const hv = document.getElementById('voter-voted-filter').value;
+  if (s)  url += `search=${encodeURIComponent(s)}&`;
+  if (hv !== '') url += `has_voted=${hv}&`;
+
+  const tbody = document.getElementById('voters-tbody');
+  tbody.innerHTML = '<tr><td colspan="8"><div class="spinner"></div></td></tr>';
+
+  try {
+    const json = await apiFetch(url);
+    const data = json.data || [];
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No voters found.</div></td></tr>'; return; }
+    tbody.innerHTML = data.map((v,i) => `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><strong>${esc(v.full_name)}</strong></td>
+        <td style="color:var(--muted)">${esc(v.student_id)}</td>
+        <td>${esc(v.email)}</td>
+        <td>${esc(v.course)}</td>
+        <td>${esc(v.year_level)}</td>
+        <td>${v.has_voted == 1 ? '<span class="badge badge-voted">Voted</span>' : '<span class="badge badge-not-voted">Not Yet</span>'}</td>
+        <td><div style="display:flex;gap:0.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="editVoter(${v.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('voters',${v.id},'${esc(v.full_name)}',loadVoters)">Del</button>
+        </div></td>
+      </tr>`).join('');
+  } catch { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Failed to load.</div></td></tr>'; }
+}
+
+// ── POSITIONS ──
+async function loadPositions() {
+  const tbody = document.getElementById('positions-tbody');
+  tbody.innerHTML = '<tr><td colspan="5"><div class="spinner"></div></td></tr>';
+  try {
+    const json = await apiFetch('/positions');
+    const data = json.data || [];
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No positions found.</div></td></tr>'; return; }
+    tbody.innerHTML = data.map((p,i) => `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><strong>${esc(p.title)}</strong></td>
+        <td style="color:var(--muted)">${esc(p.description||'—')}</td>
+        <td>${p.max_votes}</td>
+        <td><div style="display:flex;gap:0.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="editPosition(${p.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('positions',${p.id},'${esc(p.title)}',loadPositions)">Del</button>
+        </div></td>
+      </tr>`).join('');
+  } catch { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Failed to load.</div></td></tr>'; }
+}
+
+// ── RESULTS ──
+async function loadResults() {
+  const cont = document.getElementById('results-container');
+  cont.innerHTML = '<div class="spinner"></div>';
+  try {
+    const json = await apiFetch('/results');
+    if (!json.success) { cont.innerHTML = '<div class="empty-state">Failed to load results.</div>'; return; }
+    const { results, total_voters, total_voted, turnout_pct } = json.data;
+
+    let html = `<div class="stat-card" style="margin-bottom:1.5rem">
+      <div class="label">Voter Turnout</div>
+      <div class="value">${turnout_pct}%</div>
+      <div class="sub">${total_voted} out of ${total_voters} voters</div>
+      <div class="turnout-bar-wrap" style="margin-top:0.6rem"><div class="turnout-bar" style="width:${turnout_pct}%"></div></div>
+    </div><div class="results-grid">`;
+
+    results.forEach(pos => {
+      const maxVotes = Math.max(...pos.candidates.map(c => c.vote_count), 1);
+      html += `<div class="result-card">
+        <div class="result-card-header">🏛 ${esc(pos.position)}</div>`;
+      if (!pos.candidates.length) {
+        html += `<div class="result-row"><span style="color:var(--muted)">No candidates</span></div>`;
+      } else {
+        pos.candidates.forEach((c, idx) => {
+          const pct = maxVotes > 0 ? Math.round((c.vote_count / maxVotes) * 100) : 0;
+          const isWinner = idx === 0 && c.vote_count > 0;
+          html += `<div class="result-row ${isWinner ? 'winner' : ''}">
+            ${isWinner ? '<span class="winner-crown">👑</span>' : '<span style="width:20px;display:inline-block"></span>'}
+            <div style="flex:1">
+              <div class="result-name">${esc(c.candidate)}</div>
+              <div class="result-meta">${esc(c.course)} · ${esc(c.year_level)}</div>
+            </div>
+            <div class="result-bar-wrap"><div class="result-bar" style="width:${pct}%"></div></div>
+            <div class="result-votes">${c.vote_count}</div>
+          </div>`;
+        });
+      }
+      html += `</div>`;
+    });
+    html += '</div>';
+    cont.innerHTML = html;
+  } catch { cont.innerHTML = '<div class="empty-state">Failed to load results.</div>'; }
+}
+
+// ── CAST VOTE ──
+let voterData = null;
+async function lookupVoter() {
+  const sid = document.getElementById('vote-student-id').value.trim();
+  if (!sid) { showToast('Enter your Student ID.', true); return; }
+
+  try {
+    const json = await apiFetch(`/voters?search=${encodeURIComponent(sid)}`);
+    const voter = json.data?.find(v => v.student_id === sid);
+    if (!voter) { showToast('Student ID not found.', true); document.getElementById('vote-panel').style.display='none'; return; }
+    if (voter.has_voted == 1) { showToast('You have already voted!', true); document.getElementById('vote-panel').style.display='none'; return; }
+
+    voterData = voter;
+    document.getElementById('voter-info').innerHTML = `
+      <strong>${esc(voter.full_name)}</strong> &nbsp;·&nbsp; ${esc(voter.student_id)} &nbsp;·&nbsp; ${esc(voter.course)} ${esc(voter.year_level)}`;
+
+    // Load positions + candidates
+    const [posRes, candRes] = await Promise.all([apiFetch('/positions'), apiFetch('/candidates?status=Active')]);
+    const positions   = posRes.data || [];
+    const candidates  = candRes.data || [];
+
+    let html = '';
+    positions.forEach(pos => {
+      const posCands = candidates.filter(c => c.position_id == pos.id);
+      html += `<div class="vote-position"><h4>${esc(pos.title)}</h4>`;
+      if (!posCands.length) { html += `<div style="color:var(--muted);font-size:0.82rem">No candidates for this position.</div>`; }
+      else posCands.forEach(c => {
+        html += `<label class="vote-option">
+          <input type="radio" name="pos_${pos.id}" value="${c.id}"/>
+          <div><div class="vote-option-name">${esc(c.full_name)}</div><div class="vote-option-meta">${esc(c.course)} · ${esc(c.year_level)}</div></div>
+        </label>`;
+      });
+      html += `</div>`;
+    });
+    document.getElementById('vote-positions').innerHTML = html;
+    document.getElementById('vote-panel').style.display = 'block';
+  } catch { showToast('Failed to look up voter.', true); }
+}
+
+async function submitVote() {
+  if (!voterData) { showToast('Please verify your student ID first.', true); return; }
+
+  const posRes = await apiFetch('/positions');
+  const positions = posRes.data || [];
+  const votes = [];
+
+  for (const pos of positions) {
+    const sel = document.querySelector(`input[name="pos_${pos.id}"]:checked`);
+    if (sel) votes.push({ position_id: pos.id, candidate_id: parseInt(sel.value) });
+  }
+
+  if (!votes.length) { showToast('Please select at least one candidate.', true); return; }
+
+  if (!confirm('Submit your vote? This cannot be undone.')) return;
+
+  try {
+    const json = await apiFetch('/votes', 'POST', { voter_id: voterData.id, votes });
+    if (json.success) {
+      showToast(json.message);
+      document.getElementById('vote-panel').style.display = 'none';
+      document.getElementById('vote-student-id').value = '';
+      voterData = null;
+    } else {
+      showToast(json.message, true);
+    }
+  } catch { showToast('Failed to submit vote.', true); }
+}
+
+// ── MODAL ──
+function openModal(type, data = null) {
+  modalType = type;
+  editingId = data?.id || null;
+  document.getElementById('overlay').classList.add('active');
+
+  const titles = { candidate: 'CANDIDATE', voter: 'VOTER', position: 'POSITION' };
+  document.getElementById('modal-title').textContent = (editingId ? 'EDIT ' : 'ADD ') + titles[type];
+
+  const posOptions = allPositions.map(p => `<option value="${p.id}" ${data?.position_id==p.id?'selected':''}>${esc(p.title)}</option>`).join('');
+
+  const yearOpts = ['1st Year','2nd Year','3rd Year','4th Year'].map(y => `<option ${data?.year_level===y?'selected':''}>${y}</option>`).join('');
+
+  if (type === 'candidate') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group full"><label>Full Name</label><input id="f-name" value="${esc(data?.full_name||'')}"/></div>
+        <div class="form-group"><label>Student ID</label><input id="f-sid" value="${esc(data?.student_id||'')}"/></div>
+        <div class="form-group"><label>Position</label><select id="f-pos"><option value="">Select…</option>${posOptions}</select></div>
+        <div class="form-group"><label>Course</label><input id="f-course" value="${esc(data?.course||'')}"/></div>
+        <div class="form-group"><label>Year Level</label><select id="f-year"><option value="">Select…</option>${yearOpts}</select></div>
+        <div class="form-group"><label>Status</label><select id="f-status"><option ${data?.status==='Active'?'selected':''}>Active</option><option ${data?.status==='Disqualified'?'selected':''}>Disqualified</option></select></div>
+        <div class="form-group full"><label>Platform</label><textarea id="f-platform" rows="2">${esc(data?.platform||'')}</textarea></div>
+      </div>`;
+  } else if (type === 'voter') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group full"><label>Full Name</label><input id="f-name" value="${esc(data?.full_name||'')}"/></div>
+        <div class="form-group"><label>Student ID</label><input id="f-sid" value="${esc(data?.student_id||'')}"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="f-email" value="${esc(data?.email||'')}"/></div>
+        <div class="form-group"><label>Course</label><input id="f-course" value="${esc(data?.course||'')}"/></div>
+        <div class="form-group"><label>Year Level</label><select id="f-year"><option value="">Select…</option>${yearOpts}</select></div>
+      </div>`;
+  } else if (type === 'position') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group full"><label>Position Title</label><input id="f-title" value="${esc(data?.title||'')}"/></div>
+        <div class="form-group full"><label>Description</label><input id="f-desc" value="${esc(data?.description||'')}"/></div>
+        <div class="form-group"><label>Max Votes</label><input type="number" id="f-max" value="${data?.max_votes||1}" min="1"/></div>
+      </div>`;
+  }
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('active'); editingId = null; modalType = null; }
+function closeOnBackdrop(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+async function saveModal() {
+  let body = {}, url, method;
+
+  if (modalType === 'candidate') {
+    body = { full_name: val('f-name'), student_id: val('f-sid'), position_id: val('f-pos'), course: val('f-course'), year_level: val('f-year'), status: val('f-status'), platform: val('f-platform') };
+    url = editingId ? `/candidates/${editingId}` : '/candidates';
+    method = editingId ? 'PUT' : 'POST';
+  } else if (modalType === 'voter') {
+    body = { full_name: val('f-name'), student_id: val('f-sid'), email: val('f-email'), course: val('f-course'), year_level: val('f-year') };
+    url = editingId ? `/voters/${editingId}` : '/voters';
+    method = editingId ? 'PUT' : 'POST';
+  } else if (modalType === 'position') {
+    body = { title: val('f-title'), description: val('f-desc'), max_votes: parseInt(val('f-max')) || 1 };
+    url = editingId ? `/positions/${editingId}` : '/positions';
+    method = editingId ? 'PUT' : 'POST';
+  }
+
+  try {
+    const json = await apiFetch(url, method, body);
+    if (json.success) {
+      showToast(json.message);
+      closeModal();
+      if (modalType === 'candidate') { loadCandidates(); loadDashboard(); }
+      if (modalType === 'voter')     { loadVoters(); loadDashboard(); }
+      if (modalType === 'position')  loadPositions();
+    } else { showToast(json.message, true); }
+  } catch { showToast('Request failed.', true); }
+}
+
+async function editCandidate(id) {
+  const json = await apiFetch(`/candidates/${id}`);
+  if (json.success) openModal('candidate', json.data);
+}
+async function editVoter(id) {
+  const json = await apiFetch(`/voters/${id}`);
+  if (json.success) openModal('voter', json.data);
+}
+async function editPosition(id) {
+  const json = await apiFetch(`/positions/${id}`);
+  if (json.success) openModal('position', json.data);
+}
+
+async function deleteItem(resource, id, name, reloadFn) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    const json = await apiFetch(`/${resource}/${id}`, 'DELETE');
+    showToast(json.message, !json.success);
+    if (json.success) { reloadFn(); loadDashboard(); }
+  } catch { showToast('Delete failed.', true); }
+}
+
+// ── UTILS ──
+function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'error' : '';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+init();
+</script>
+</body>
+</html>

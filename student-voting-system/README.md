@@ -95,5 +95,5 @@ Base URL: `http://localhost/student-voting-system/api`
 ---
 
 ## Developer
-**[Your Name]**  
+**STEPHEN MARK MALUTO**  
 Institute of Computer Studies — Tangub City Global College
